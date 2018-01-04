@@ -4,7 +4,7 @@ Default wallpapers of Ubuntu are stored at
 
 <code>/usr/share/backgrounds</code>
 
-In other to appear in settings/background, these pictures haves to be list in a xml file located at 
+In order to appear in settings/background, these pictures haves to be list in a xml file located at 
 
 <code>/usr/share/gnome-background-properties
 </code>
