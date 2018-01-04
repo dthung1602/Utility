@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 
 from imghdr import what
+from os import getuid
 from os import listdir
 from os.path import abspath
+from os.path import isdir
 from os.path import isfile
 from sys import argv
 
@@ -52,6 +54,11 @@ def create_xml_file(directory):
     for file in files:
         if what(directory_path + file) is None:
             not_image_files.add(file)
+    if len(not_image_files) > 0:
+        print("In directory {}, these files are not images and will be ignored:".format(directory_name))
+        for t in not_image_files:
+            print("  " + t)
+        print("\n")
     files = files - not_image_files
 
     # create xml file content
@@ -66,7 +73,7 @@ def create_xml_file(directory):
     # check if xml exist
     xml_abs_path = destination_dir + xml_file_name
     if isfile(xml_abs_path):
-        print("File {} has already exist".format(xml_abs_path))
+        print("File {} has already exist".format(xml_file_name))
         option = ""
         while option.upper() not in ("YES", "NO", "Y", "N"):
             option = input("Do you want to overwrite it? (y/n) ")
@@ -81,14 +88,31 @@ def create_xml_file(directory):
     except FileNotFoundError:
         exit_with_error("Invalid file path")
     except PermissionError:
-        exit_with_error("Please run this script as root")
+        exit_with_error("Permission error occurred")
     except IOError:
         exit_with_error("Cannot create file {}".format(xml_abs_path))
 
+    # output result for user
+    print("{} is created with {} image(s)".format(xml_file_name, len(files)))
+
 
 if __name__ == '__main__':
+    # check for sudo
+    if getuid() != 0:
+        exit_with_error("Please run this script as admin!")
+
+    # check number of parameters
     if len(argv) == 1:
         exit_with_error("Please pass at least one directory name")
 
+    # remove invalid directory
+    invalid_arg = set([d for d in argv[1:] if not isdir(d)])
+    if len(invalid_arg) > 0:
+        print("Followings are invalid directory name(s) and will be ignored:")
+        for t in invalid_arg:
+            print("  " + t)
+        print("\n")
+
+    # create xml files
     for directory in argv[1:]:
         create_xml_file(directory)
