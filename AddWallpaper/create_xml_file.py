@@ -3,10 +3,10 @@
 from imghdr import what
 from os import getuid
 from os import listdir
-from os.path import abspath
-from os.path import isdir
-from os.path import isfile
+from os import makedirs
+from os import path
 from sys import argv
+from sys import stderr
 
 wallpaper_tag_structure = """
  <wallpaper>
@@ -25,11 +25,13 @@ xml_file_structure = """
 </wallpapers>
 """
 
-destination_dir = "/usr/share/gnome-background-properties/"
+destination_dir = ""
+global_dir = "/usr/share/gnome-background-properties/"
+local_dir = "~/.local/share/gnome-background-properties/"
 
 
 def exit_with_error(error):
-    print(error)
+    print(error, file=stderr)
     exit(1)
 
 
@@ -38,7 +40,7 @@ def remove_filename_extension(filename):
 
 
 def process_directory(directory):
-    abs_dir_path = abspath(directory)
+    abs_dir_path = path.abspath(directory)
     dir_name = abs_dir_path[abs_dir_path.rindex("/") + 1:]
     return abs_dir_path + "/", dir_name
 
@@ -72,7 +74,7 @@ def create_xml_file(directory):
 
     # check if xml exist
     xml_abs_path = destination_dir + xml_file_name
-    if isfile(xml_abs_path):
+    if path.isfile(xml_abs_path):
         print("File {} has already exist".format(xml_file_name))
         option = ""
         while option.upper() not in ("YES", "NO", "Y", "N"):
@@ -80,33 +82,45 @@ def create_xml_file(directory):
         if option.upper() in ("NO", "N"):
             exit_with_error("User abortion")
 
-    # create xml file at /usr/share/gnome-background-properties
+    # create xml file
     try:
         f = open(xml_abs_path, "w+")
         f.write(xml_file_content)
         f.close()
     except FileNotFoundError:
-        exit_with_error("Invalid file path")
+        exit_with_error("Invalid file path: " + xml_abs_path)
     except PermissionError:
         exit_with_error("Permission error occurred")
     except IOError:
-        exit_with_error("Cannot create file {}".format(xml_abs_path))
+        exit_with_error("Cannot create file " + xml_abs_path)
 
     # output result for user
-    print("{} is created with {} image(s)".format(xml_file_name, len(files)))
+    print("{} is created at {} with {} image(s)".format(xml_file_name, destination_dir, len(files)))
 
 
 if __name__ == '__main__':
-    # check for sudo
-    if getuid() != 0:
-        exit_with_error("Please run this script as admin!")
-
     # check number of parameters
     if len(argv) == 1:
         exit_with_error("Please pass at least one directory name")
 
+    # choose global or local
+    option = ""
+    while option not in ["G", "L", "GLOBAL", "LOCAL"]:
+        option = input("Add wallpaper globally or locally? (G/L) ").upper()
+
+    # choose destination dir accordingly
+    if option in ["G", "GLOBAL"]:
+        # check for sudo
+        if getuid() != 0:
+            exit_with_error("This script must be run as super user to create global wallpapers!")
+        destination_dir = global_dir
+    else:
+        local_dir = path.expanduser(local_dir)
+        makedirs(local_dir, exist_ok=True)  # create directories
+        destination_dir = local_dir
+
     # remove invalid directory
-    invalid_arg = set([d for d in argv[1:] if not isdir(d)])
+    invalid_arg = set([d for d in argv[1:] if not path.isdir(d)])
     if len(invalid_arg) > 0:
         print("Followings are invalid directory name(s) and will be ignored:")
         for t in invalid_arg:
