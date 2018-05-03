@@ -130,3 +130,6 @@ if __name__ == '__main__':
     # create xml files
     for directory in argv[1:]:
         create_xml_file(directory)
+
+    # print guidance
+    print("\nThese images now appear in setting -> background -> background/lockscreen")

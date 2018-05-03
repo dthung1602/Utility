@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 
 from imghdr import what
+from os import getuid
 from os import listdir
+from os import makedirs
 from os import path
+from random import random
 from sys import argv
 from sys import stderr
-from random import random
 
 static_tag_structure = """
   <static>
@@ -34,9 +36,9 @@ xml_file_structure = """
 </background>
 """
 
-# destination_dir = "/usr/share/backgrounds/"
-# destination_dir = "~/.local/share/backgrounds/contest/"
-destination_dir = "./"
+local_dir = "~/.local/share/backgrounds/contest/"
+global_dir = "/usr/share/backgrounds/contest/"
+destination_dir = ""
 
 
 def exit_with_error(error):
@@ -65,9 +67,6 @@ def process_directory(directory):
 
 
 def create_xml_file(directory):
-    # global destination_dir
-    # destination_dir = abspath(destination_dir)
-
     # prompt user for wallpaper time interval mode
     print("Please choose an option for wallpaper time:\n"
           "    1. Random interval"
@@ -156,6 +155,22 @@ if __name__ == '__main__':
     if len(argv) == 1:
         exit_with_error("Please pass at least one directory name")
 
+    # choose global or local
+    option = ""
+    while option not in ["G", "L", "GLOBAL", "LOCAL"]:
+        option = input("Add wallpaper globally or locally? (G/L) ").upper()
+
+    # choose destination dir accordingly
+    if option in ["G", "GLOBAL"]:
+        # check for sudo
+        if getuid() != 0:
+            exit_with_error("This script must be run as super user to create global slideshow!")
+        destination_dir = global_dir
+    else:
+        local_dir = path.expanduser(local_dir)
+        makedirs(local_dir, exist_ok=True)  # create directories
+        destination_dir = local_dir
+
     # remove invalid directory
     invalid_arg = set([d for d in argv[1:] if not path.isdir(d)])
     if len(invalid_arg) > 0:
@@ -167,3 +182,6 @@ if __name__ == '__main__':
     # create xml files
     for directory in argv[1:]:
         create_xml_file(directory)
+
+    # print guidance
+    print("\nNow you can go to gnome-tweak -> appearance -> background/lockscreen image and choose the xml file")
