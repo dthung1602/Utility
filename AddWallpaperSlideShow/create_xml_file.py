@@ -68,9 +68,11 @@ def process_directory(directory):
 
 def create_xml_file(directory):
     # prompt user for wallpaper time interval mode
+    print("\n------------------------------")
+    print("         " + directory.upper())
     print("Please choose an option for wallpaper time:\n"
           "    1. Random interval"
-          "    2. Fixed interval\n")
+          "    2. Fixed interval")
     option = None
     while option != "1" and option != "2":
         option = input("Enter option: ")
@@ -147,10 +149,6 @@ def create_xml_file(directory):
 
 
 if __name__ == '__main__':
-    # check for sudo
-    # if getuid() != 0:
-    #     exit_with_error("Please run this script as admin!")
-
     # check number of parameters
     if len(argv) == 1:
         exit_with_error("Please pass at least one directory name")
