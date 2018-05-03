@@ -82,7 +82,7 @@ def create_xml_file(directory):
 
     # create xml file at /usr/share/gnome-background-properties
     try:
-        f = open(xml_abs_path, "w")
+        f = open(xml_abs_path, "w+")
         f.write(xml_file_content)
         f.close()
     except FileNotFoundError:
